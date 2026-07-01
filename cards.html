@@ -1,0 +1,656 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Card Strategy & Benefit Ledger</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap');
+
+  :root{
+    --paper: #EDE7D8;
+    --paper-raised: #F6F2E7;
+    --ink: #1C2B39;
+    --ink-soft: #4A5A68;
+    --brass: #A6763B;
+    --brass-soft: #C89A5E;
+    --bilt: #2F5233;
+    --bilt-tint: #E3EBDF;
+    --chase: #1E4C8C;
+    --chase-tint: #E1E9F5;
+    --amex: #5B6670;
+    --amex-tint: #E9EAEB;
+    --ok: #4F7A5B;
+    --line: rgba(28,43,57,0.14);
+    --line-strong: rgba(28,43,57,0.28);
+  }
+
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background: var(--paper);
+    background-image:
+      linear-gradient(var(--line) 1px, transparent 1px);
+    background-size: 100% 2.4rem;
+    color: var(--ink);
+    font-family: 'Inter', sans-serif;
+    -webkit-font-smoothing: antialiased;
+    padding: 0 0 4rem 0;
+  }
+
+  .wrap{ max-width: 760px; margin: 0 auto; padding: 1.75rem 1.25rem 0; }
+
+  /* ---------- Header / ticker ---------- */
+  header{
+    background: var(--ink);
+    color: var(--paper-raised);
+    border-radius: 10px;
+    padding: 1.3rem 1.4rem 1.1rem;
+    margin-bottom: 1.4rem;
+    box-shadow: 0 2px 0 var(--brass);
+  }
+  .eyebrow{
+    font-family:'IBM Plex Mono', monospace;
+    font-size: 0.68rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--brass-soft);
+    margin: 0 0 0.35rem;
+  }
+  h1{
+    font-family:'Space Grotesk', sans-serif;
+    font-weight: 700;
+    font-size: 1.55rem;
+    margin: 0 0 0.7rem;
+    letter-spacing: -0.01em;
+  }
+  .ticker{
+    display:flex; flex-wrap:wrap; gap: 0.9rem;
+    font-family:'IBM Plex Mono', monospace;
+    font-size: 0.72rem;
+    color: rgba(246,242,231,0.8);
+    border-top: 1px solid rgba(246,242,231,0.18);
+    padding-top: 0.6rem;
+  }
+  .ticker b{ color: var(--brass-soft); font-weight:600; }
+
+  /* ---------- Section shell ---------- */
+  section{ margin-bottom: 1.8rem; }
+  .section-head{
+    display:flex; align-items:baseline; justify-content:space-between;
+    margin-bottom: 0.6rem;
+    border-bottom: 2px solid var(--ink);
+    padding-bottom: 0.35rem;
+  }
+  .section-head h2{
+    font-family:'Space Grotesk', sans-serif;
+    font-size: 1.05rem;
+    margin: 0;
+    letter-spacing: -0.01em;
+  }
+  .section-sub{
+    font-family:'IBM Plex Mono', monospace;
+    font-size: 0.68rem;
+    color: var(--ink-soft);
+  }
+
+  /* ---------- Card chips ---------- */
+  .chip{
+    display:inline-block;
+    font-family:'IBM Plex Mono', monospace;
+    font-size: 0.66rem;
+    font-weight: 600;
+    letter-spacing: 0.03em;
+    padding: 0.18rem 0.5rem;
+    border-radius: 4px;
+    white-space: nowrap;
+  }
+  .chip.bilt{ background: var(--bilt-tint); color: var(--bilt); }
+  .chip.chase{ background: var(--chase-tint); color: var(--chase); }
+  .chip.amex{ background: var(--amex-tint); color: var(--amex); }
+
+  /* ---------- Spend matrix ---------- */
+  .matrix{
+    background: var(--paper-raised);
+    border: 1px solid var(--line-strong);
+    border-radius: 8px;
+    overflow: hidden;
+  }
+  .matrix-row{
+    display:grid;
+    grid-template-columns: 74px 1fr auto;
+    gap: 0.6rem;
+    align-items:center;
+    padding: 0.55rem 0.8rem;
+    border-bottom: 1px solid var(--line);
+  }
+  .matrix-row:last-child{ border-bottom:none; }
+  .matrix-row.head{
+    background: rgba(28,43,57,0.05);
+    font-family:'IBM Plex Mono', monospace;
+    font-size: 0.64rem;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--ink-soft);
+  }
+  .cat{ font-size: 0.86rem; font-weight: 500; }
+  .cat small{ display:block; font-size: 0.72rem; color: var(--ink-soft); font-weight:400; margin-top:1px;}
+  .rate{
+    font-family:'IBM Plex Mono', monospace;
+    font-weight: 600;
+    font-size: 0.86rem;
+    color: var(--ink);
+    text-align:right;
+  }
+
+  /* ---------- Benefit tracker ---------- */
+  .cadence-group{ margin-bottom: 1rem; }
+  .cadence-label{
+    display:flex; align-items:center; gap:0.5rem;
+    font-family:'IBM Plex Mono', monospace;
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--brass);
+    margin: 0.9rem 0 0.4rem;
+  }
+  .cadence-label .count{
+    color: var(--ink-soft);
+    font-weight: 400;
+    text-transform:none;
+    letter-spacing:0;
+  }
+  .cadence-label::after{
+    content:'';
+    flex:1;
+    height:1px;
+    background: var(--line-strong);
+  }
+
+  .benefit{
+    display:grid;
+    grid-template-columns: 28px 1fr auto;
+    align-items:center;
+    gap: 0.65rem;
+    background: var(--paper-raised);
+    border: 1px solid var(--line);
+    border-radius: 7px;
+    padding: 0.6rem 0.75rem;
+    margin-bottom: 0.4rem;
+  }
+  .benefit.checked{
+    border-color: var(--ok);
+    background: #EEF3EE;
+  }
+  .cb{
+    width: 22px; height: 22px;
+    border-radius: 5px;
+    border: 2px solid var(--ink-soft);
+    background: var(--paper-raised);
+    cursor: pointer;
+    display:flex; align-items:center; justify-content:center;
+    flex-shrink:0;
+    transition: all 0.15s ease;
+  }
+  .cb.on{ background: var(--ok); border-color: var(--ok); }
+  .cb svg{ width:13px; height:13px; opacity:0; transition: opacity 0.1s ease; }
+  .cb.on svg{ opacity:1; }
+
+  .benefit-main .name{ font-size: 0.87rem; font-weight: 500; line-height:1.3; }
+  .benefit-main .meta{
+    font-size: 0.74rem;
+    color: var(--ink-soft);
+    margin-top: 0.15rem;
+  }
+  .benefit.checked .name{ text-decoration: line-through; color: var(--ink-soft); }
+
+  .value{
+    font-family:'IBM Plex Mono', monospace;
+    font-weight:600;
+    font-size: 0.82rem;
+    text-align:right;
+    white-space:nowrap;
+  }
+
+  footer{
+    text-align:center;
+    font-family:'IBM Plex Mono', monospace;
+    font-size: 0.68rem;
+    color: var(--ink-soft);
+    margin-top: 1rem;
+    padding-top: 1rem;
+    border-top: 1px solid var(--line);
+  }
+
+  @media (max-width: 480px){
+    .matrix-row{ grid-template-columns: 58px 1fr auto; gap:0.4rem; padding:0.5rem 0.6rem;}
+    .chip{ font-size:0.6rem; padding:0.15rem 0.35rem;}
+    h1{ font-size:1.3rem; }
+  }
+
+  /* ---------- Info trigger ---------- */
+  .info-btn{
+    width: 18px; height: 18px;
+    border-radius: 50%;
+    border: 1.5px solid var(--ink-soft);
+    color: var(--ink-soft);
+    background: transparent;
+    font-family:'IBM Plex Mono', monospace;
+    font-size: 0.62rem;
+    font-weight: 600;
+    display:inline-flex; align-items:center; justify-content:center;
+    cursor: pointer;
+    flex-shrink: 0;
+    margin-left: 6px;
+    vertical-align: middle;
+    transition: all 0.15s ease;
+  }
+  .info-btn:hover, .info-btn:focus-visible{
+    border-color: var(--brass);
+    color: var(--brass);
+    outline: none;
+  }
+
+  /* ---------- Modal ---------- */
+  .modal-overlay{
+    position: fixed; inset: 0;
+    background: rgba(28,43,57,0.55);
+    display: none;
+    align-items: flex-end;
+    justify-content: center;
+    z-index: 100;
+    padding: 0;
+  }
+  .modal-overlay.open{ display:flex; }
+  @media (min-width: 560px){
+    .modal-overlay{ align-items: center; padding: 1.5rem; }
+  }
+
+  .modal{
+    background: var(--paper-raised);
+    width: 100%;
+    max-width: 480px;
+    max-height: 82vh;
+    overflow-y: auto;
+    border-radius: 16px 16px 0 0;
+    border-top: 3px solid var(--brass);
+    padding: 1.3rem 1.3rem 1.6rem;
+    box-shadow: 0 -4px 24px rgba(0,0,0,0.25);
+  }
+  @media (min-width: 560px){
+    .modal{ border-radius: 12px; border-top: 3px solid var(--brass); box-shadow: 0 12px 40px rgba(0,0,0,0.3); }
+  }
+
+  .modal-top{
+    display:flex; justify-content:space-between; align-items:flex-start;
+    gap: 0.75rem;
+    margin-bottom: 0.9rem;
+  }
+  .modal-title{
+    font-family:'Space Grotesk', sans-serif;
+    font-weight: 700;
+    font-size: 1.12rem;
+    line-height: 1.3;
+  }
+  .modal-tags{ margin-top: 0.4rem; display:flex; gap:0.4rem; align-items:center; flex-wrap:wrap; }
+  .modal-value{
+    font-family:'IBM Plex Mono', monospace;
+    font-weight: 700;
+    font-size: 0.78rem;
+    background: var(--ink);
+    color: var(--paper-raised);
+    padding: 0.2rem 0.55rem;
+    border-radius: 5px;
+  }
+  .modal-cadence{
+    font-family:'IBM Plex Mono', monospace;
+    font-size: 0.68rem;
+    color: var(--ink-soft);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+  .modal-close{
+    width: 30px; height: 30px;
+    border-radius: 50%;
+    border: none;
+    background: rgba(28,43,57,0.08);
+    color: var(--ink);
+    font-size: 1.1rem;
+    line-height: 1;
+    cursor: pointer;
+    flex-shrink: 0;
+  }
+  .modal-close:hover{ background: rgba(28,43,57,0.16); }
+
+  .modal-section{ margin-top: 1rem; }
+  .modal-section h4{
+    font-family:'IBM Plex Mono', monospace;
+    font-size: 0.68rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--brass);
+    margin: 0 0 0.4rem;
+  }
+  .modal-section p{
+    font-size: 0.87rem;
+    line-height: 1.5;
+    margin: 0;
+    color: var(--ink);
+  }
+  .modal-section ul{
+    margin: 0; padding-left: 1.1rem;
+  }
+  .modal-section li{
+    font-size: 0.85rem;
+    line-height: 1.5;
+    margin-bottom: 0.35rem;
+    color: var(--ink);
+  }
+  .modal-section li::marker{ color: var(--brass); }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <p class="eyebrow">Personal Card Strategy — Reference Sheet</p>
+    <h1>Spend Routing &amp; Benefit Ledger</h1>
+    <div class="ticker" id="ticker"></div>
+  </header>
+
+  <section>
+    <div class="section-head">
+      <h2>Where Spend Goes</h2>
+      <span class="section-sub">by category</span>
+    </div>
+    <div class="matrix">
+      <div class="matrix-row head">
+        <span>Card</span><span>Category</span><span>Rate</span>
+      </div>
+      <div class="matrix-row">
+        <span class="chip bilt">BILT</span>
+        <span class="cat">Everyday / default spend<small>Utilities, retail, Amazon, anything uncategorized</small></span>
+        <span class="rate">2x</span>
+      </div>
+      <div class="matrix-row">
+        <span class="chip bilt">BILT</span>
+        <span class="cat">1st of month (Rent Day)<small>Non-housing spend, capped at $500</small></span>
+        <span class="rate">4x</span>
+      </div>
+      <div class="matrix-row">
+        <span class="chip bilt">BILT</span>
+        <span class="cat">Rent / mortgage<small>No transaction fee</small></span>
+        <span class="rate">1x</span>
+      </div>
+      <div class="matrix-row">
+        <span class="chip chase">CSP</span>
+        <span class="cat">Dining &amp; takeout<small>Incl. Grubhub — points only, no Chase credit applies</small></span>
+        <span class="rate">3x</span>
+      </div>
+      <div class="matrix-row">
+        <span class="chip chase">CSP</span>
+        <span class="cat">Gas &amp; EV charging<small>Costco/BJ's/Sam's gas pumps qualify</small></span>
+        <span class="rate">3x</span>
+      </div>
+      <div class="matrix-row">
+        <span class="chip chase">CSP</span>
+        <span class="cat">Online grocery<small>Excludes Target, Walmart, wholesale clubs</small></span>
+        <span class="rate">3x</span>
+      </div>
+      <div class="matrix-row">
+        <span class="chip chase">CSP</span>
+        <span class="cat">Streaming &amp; vacation rentals<small>Airbnb/Vrbo booked direct</small></span>
+        <span class="rate">3x</span>
+      </div>
+      <div class="matrix-row">
+        <span class="chip chase">CSP</span>
+        <span class="cat">Travel — Chase portal<small>Flights, hotels, cars via Chase Travel</small></span>
+        <span class="rate">5x</span>
+      </div>
+      <div class="matrix-row">
+        <span class="chip amex">AMEX</span>
+        <span class="cat">Flights — booked direct<small>Airline site or Amex Travel, up to $500k/yr</small></span>
+        <span class="rate">5x</span>
+      </div>
+      <div class="matrix-row">
+        <span class="chip amex">AMEX</span>
+        <span class="cat">Prepaid hotels via Amex Travel<small>Fine Hotels + Resorts / The Hotel Collection</small></span>
+        <span class="rate">5x</span>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="section-head">
+      <h2>Benefit Tracker</h2>
+      <span class="section-sub">tap to check off</span>
+    </div>
+    <div id="benefits"></div>
+  </section>
+
+  <footer>Checkboxes reset automatically when a new period starts · rates &amp; credits as of Jul 2026, confirm before relying on for large purchases</footer>
+</div>
+
+<div class="modal-overlay" id="modalOverlay">
+  <div class="modal" id="modalBody" role="dialog" aria-modal="true"></div>
+</div>
+
+<script>
+const BENEFITS = [
+  // ---- MONTHLY ----
+  { id:'amex-uber-eats', cadence:'monthly', card:'amex', name:'Uber Cash → Uber Eats', meta:'$15/mo (Jan–Nov), $35 in Dec', value:'$15',
+    detail:'Amex deposits Uber Cash directly into your linked Uber account once your Platinum is added as a payment method. It applies automatically to Uber rides or Uber Eats orders — no code needed. Totals $200/year ($15 x 11 months + $35 in December).',
+    restrictions:['You must select an Amex card as the payment method inside the Uber app for the credit to apply','Enrollment/card-linking required — it doesn\'t work retroactively','Unused monthly balance does not roll over to the next month','Valid only for Uber rides and Uber Eats orders placed in the U.S.'] },
+  { id:'amex-digital-ent', cadence:'monthly', card:'amex', name:'Digital Entertainment credit', meta:'Disney+, NYT, Hulu, Peacock, etc.', value:'$25',
+    detail:'Up to $25/month ($300/year) in statement credits for eligible charges on Disney+, the Disney+ Bundle, ESPN+, Hulu, The New York Times, Paramount+, Peacock, The Wall Street Journal, YouTube TV, and YouTube Premium.',
+    restrictions:['Enrollment required in the Amex app before charges post','Must purchase directly from the provider — bundled subscriptions through Apple/Google/cable providers don\'t qualify','Credit triggers automatically when a qualifying charge hits your statement','Unused monthly amount does not roll over'] },
+  { id:'amex-walmart', cadence:'monthly', card:'amex', name:'Walmart+ membership credit', meta:'If enrolled in Walmart+', value:'$12.95',
+    detail:'Covers one monthly Walmart+ membership charge (up to $12.95 plus applicable tax) when paid with your Platinum. Total value up to $155/year if you keep the membership all 12 months.',
+    restrictions:['Membership must be set to auto-renew and charged directly to the Platinum card','"Plus Up" add-ons to Walmart+ are not eligible for the credit','No benefit if you don\'t already want a Walmart+ membership — this only reimburses the fee, it doesn\'t create free value on its own'] },
+  { id:'bilt-rentday', cadence:'monthly', card:'bilt', name:'Rent Day double points', meta:'1st of month, non-housing spend up to $500', value:'4x',
+    detail:'On the 1st of each month (12:00am ET through 11:59pm PT — about a 27-hour window), Palladium earning doubles from 2x to 4x on non-housing purchases.',
+    restrictions:['Capped at $500 of spend for bonus purposes — max 1,000 bonus points per month','Rent/mortgage payments and Bilt Cash purchases are excluded from the bonus','Bonus applies based on when the merchant submits the charge, not necessarily when you swipe — a purchase made late on the 1st could post the next day depending on the merchant'] },
+  { id:'bilt-grubhub', cadence:'monthly', card:'bilt', name:'Bilt Cash → Grubhub credit', meta:'Redeem via Bilt app before ordering', value:'$10',
+    detail:'Redeem Bilt Cash for a $10 Grubhub promo code, delivered as a one-time-use code applied at checkout on Grubhub.com or in the Grubhub app.',
+    restrictions:['Requires available Bilt Cash balance to redeem — this isn\'t automatic, you have to actively redeem it in the app','Promo code is valid only through the end of the calendar month in which it was redeemed','One-time use per code, on a single restaurant delivery order','Order subtotal must be at least $0.01 before tax, fees, and tip; discount applies to the subtotal only, up to $10'] },
+  { id:'bilt-takeout', cadence:'monthly', card:'bilt', name:'Bilt Cash → dining checkout', meta:'One in-app takeout/dine visit', value:'$25',
+    detail:'Redeem Bilt Cash toward one takeout or dine-in visit per month at a participating restaurant via Bilt\'s in-app mobile dining checkout, up to $25.',
+    restrictions:['Only works at restaurants participating in Bilt\'s dining network — not universal, check the app for what\'s nearby','Limited to one visit per month','Requires available Bilt Cash balance to redeem','Unused monthly credit does not roll over'] },
+  { id:'chase-dashpass', cadence:'monthly', card:'chase', name:'DashPass DoorDash promo', meta:'Non-restaurant orders only, not Grubhub', value:'$10',
+    detail:'As part of your complimentary DashPass membership, Sapphire Preferred holders get one $10 promo per month toward non-restaurant DoorDash orders (grocery, convenience, retail).',
+    restrictions:['Applies to non-restaurant orders only — does NOT apply to regular restaurant delivery, and has nothing to do with Grubhub','Must activate DashPass and set your Chase card as the default DoorDash payment method','If the full $10 isn\'t used on one order, the remainder is forfeited — it doesn\'t partially carry over','Discount appears in the promotion wallet at checkout or is prompted automatically'] },
+
+  // ---- QUARTERLY ----
+  { id:'amex-resy', cadence:'quarterly', card:'amex', name:'Resy dining credit', meta:'Pay w/ Platinum at any Resy restaurant', value:'$100',
+    detail:'Up to $100 back each quarter ($400/year) for dining purchases at any U.S. restaurant that participates in Resy — you don\'t need to book through the Resy app, just pay your check with the Platinum card. Also unlocks "Platinum Nights by Resy" for hard-to-get reservations.',
+    restrictions:['Enrollment required in the Amex app','No reservation necessary — the credit is tied to paying with the card at a participating restaurant, not to booking through Resy','Quarterly cap does not roll over — an unused Q1 credit is gone once Q2 starts','To use Platinum Nights, add your card to your Resy profile'] },
+  { id:'amex-lululemon', cadence:'quarterly', card:'amex', name:'Lululemon credit', meta:'US stores or lululemon.com', value:'$75',
+    detail:'Up to $75 back each quarter ($300/year) on purchases at U.S. lululemon retail stores or lululemon.com.',
+    restrictions:['Excludes lululemon outlet stores','Enrollment required','Unused quarterly credit does not roll over','Low value if you don\'t already shop lululemon — not worth forcing a purchase just to capture it'] },
+
+  // ---- SEMIANNUAL ----
+  { id:'amex-hotel', cadence:'semiannual', card:'amex', name:'FHR / Hotel Collection credit', meta:'Prepaid via Amex Travel, min. 2 nights', value:'$300',
+    detail:'Up to $300 back each half of the year (Jan–Jun, Jul–Dec; $600/year total) on prepaid bookings through Fine Hotels + Resorts or The Hotel Collection via American Express Travel. FHR bookings also include noon check-in when available, guaranteed 4pm checkout, room upgrade when available, and a ~$100 on-property credit.',
+    restrictions:['Must be a prepaid booking made through Amex Travel — booking directly with the hotel or a third party doesn\'t qualify','The Hotel Collection requires a minimum 2-night stay; Fine Hotels + Resorts does not','Each half-year credit is use-it-or-lose-it — H1\'s unused credit doesn\'t carry into H2'] },
+  { id:'bilt-hotel', cadence:'semiannual', card:'bilt', name:'Bilt Travel hotel credit', meta:'Bilt Travel Portal booking, min. 2 nights', value:'$200',
+    detail:'$200 credited each half of the year (up to $400/year) for hotel bookings made through the Bilt Travel Portal. Can apply as a discount at booking (prepaid) or as a statement credit after checkout (pay-later bookings).',
+    restrictions:['Only valid for bookings made through the Bilt Travel Portal, not direct hotel bookings','Minimum 2-night stay required','Distributed semiannually and does not roll over if unused'] },
+
+  // ---- ANNUAL ----
+  { id:'amex-clear', cadence:'annual', card:'amex', name:'CLEAR+ membership', meta:'Auto-renewing CLEAR+ paid on Platinum', value:'$209',
+    detail:'Up to $209/year in statement credits to cover an auto-renewing CLEAR+ membership, which speeds you through security ID checks at 55+ U.S. airports and some stadiums/venues.',
+    restrictions:['Excludes applicable taxes and fees, which you still pay out of pocket','Only useful if your home/frequent airports actually have CLEAR — check coverage first','Membership auto-renews annually'] },
+  { id:'amex-uberone', cadence:'annual', card:'amex', name:'Uber One membership', meta:'Covers annual auto-renewing membership', value:'$120',
+    detail:'Up to $120/year covering an auto-renewing Uber One membership (normally $9.99/mo), which gives $0 delivery fees on Uber Eats and discounted Uber rides. This is separate from the monthly Uber Cash benefit — you get both.',
+    restrictions:['Membership must be set to auto-renew and paid with the Platinum card','Distinct from Uber Cash — this only covers the membership fee, not ride/order costs themselves'] },
+  { id:'amex-airline', cadence:'annual', card:'amex', name:'Airline incidental fee credit', meta:'One selected qualifying airline', value:'$200',
+    detail:'Up to $200/year in statement credits for incidental fees — checked bags, in-flight food/drink, seat selection, change fees, overweight baggage, lounge day passes, pet-kennel fees — charged by one airline you pre-select.',
+    restrictions:['You must select your one qualifying airline in advance through Amex — you can\'t apply it retroactively to a different airline','Amex relies on the airline to correctly code the charge as an "incidental fee" — some charges may not be recognized even if they seem eligible','Does not cover the cost of the ticket itself','Unused amount does not roll over into the next year'] },
+  { id:'bilt-cash-bonus', cadence:'annual', card:'bilt', name:'Bilt Cash annual bonus', meta:'Credited ~Jan 1, up to $100 rolls over', value:'$200',
+    detail:'Palladium cardholders get $200 in Bilt Cash credited automatically around January 1st each year (or on account open date for new cardholders), usable across Grubhub, dining checkout, hotel bookings, rent/mortgage point-unlocking, and other Bilt Cash redemption categories.',
+    restrictions:['Bilt Cash expires at the end of the calendar year','Up to $100 of unused Bilt Cash can roll over into the next year — anything above that is forfeited','Value depends entirely on actually redeeming it across the monthly categories above before it expires'] },
+  { id:'chase-hotel', cadence:'annual', card:'chase', name:'Chase Travel hotel credit', meta:'Account anniversary year, via Chase Travel', value:'$100',
+    detail:'Up to $100 in statement credits each account anniversary year for hotel stays booked and prepaid through the Chase Travel portal. As of the June 2026 refresh, this can be used in a single stay rather than being split into smaller chunks.',
+    restrictions:['Tied to your account anniversary date, not the calendar year — track when your card year resets','Must book through Chase Travel specifically','One shot per anniversary year — if you don\'t use it, it does not carry forward'] },
+  { id:'chase-ge', cadence:'annual', card:'chase', name:'Global Entry / TSA PreCheck / NEXUS', meta:'Every 4 years — check if already used', value:'$120',
+    detail:'Statement credit up to $120 every 4 years to reimburse the application fee for Global Entry, TSA PreCheck, or NEXUS when charged to your Sapphire Preferred.',
+    restrictions:['Only usable once every 4 years — if you\'ve already claimed this on another card recently, you may need to wait','NEXUS coverage is a newer addition and less common among travel cards, useful if you cross into Canada','Charge must post directly to the Sapphire Preferred card'] },
+  { id:'chase-appletv', cadence:'annual', card:'chase', name:'Apple TV subscription', meta:'Activate by Dec 31, 2026', value:'1 yr',
+    detail:'One year of complimentary Apple TV (a $156 value) for Sapphire Preferred cardmembers.',
+    restrictions:['Must activate the offer through Chase by December 31, 2026, or you lose eligibility','After the complimentary year, the subscription auto-renews at the standard rate unless you cancel','Both new and existing cardmembers are eligible, but activation is not automatic'] },
+  { id:'chase-dashpass-mem', cadence:'annual', card:'chase', name:'DashPass membership', meta:'Activate by Dec 31, 2027 for 12 mo free', value:'free',
+    detail:'At least 12 months of complimentary DashPass (~$120/year value), usable on both DoorDash and Caviar, giving $0 delivery fees and reduced service fees on eligible orders.',
+    restrictions:['Must activate by December 31, 2027','Membership period is based on the first activation date across the account — shared with authorized users','You must keep your Chase Sapphire card set as the default DoorDash/Caviar payment method to retain benefits, including the separate monthly $10 promo','Applies to DoorDash/Caviar only — does not extend to Grubhub or Uber Eats'] },
+];
+
+const CADENCE_LABEL = { monthly:'Monthly', quarterly:'Quarterly', semiannual:'Semiannual', annual:'Annual' };
+const CADENCE_ORDER = ['monthly','quarterly','semiannual','annual'];
+const CHIP_LABEL = { bilt:'BILT', chase:'CSP', amex:'AMEX' };
+
+function pad(n){ return String(n).padStart(2,'0'); }
+
+function currentPeriod(cadence){
+  const now = new Date();
+  const y = now.getFullYear();
+  const m = now.getMonth()+1;
+  if(cadence==='monthly') return `${y}-${pad(m)}`;
+  if(cadence==='quarterly') return `${y}-Q${Math.ceil(m/3)}`;
+  if(cadence==='semiannual') return `${y}-H${m<=6?1:2}`;
+  return `${y}`;
+}
+
+function renderTicker(){
+  const now = new Date();
+  const y = now.getFullYear();
+  const m = now.getMonth()+1;
+  const monthName = now.toLocaleString('en-US',{month:'long'});
+  const q = Math.ceil(m/3);
+  const h = m<=6?1:2;
+  document.getElementById('ticker').innerHTML =
+    `<span><b>MONTH</b> ${monthName} ${y}</span>` +
+    `<span><b>QUARTER</b> Q${q} ${y}</span>` +
+    `<span><b>HALF</b> H${h} ${y}</span>`;
+}
+
+async function getChecked(id, period){
+  try{
+    const res = await window.storage.get(`benefit:${id}`, false);
+    if(!res) return false;
+    const data = JSON.parse(res.value);
+    return data.period === period && data.checked === true;
+  }catch(e){ return false; }
+}
+
+async function setChecked(id, period, checked){
+  try{
+    await window.storage.set(`benefit:${id}`, JSON.stringify({period, checked}), false);
+  }catch(e){ console.error('storage error', e); }
+}
+
+async function renderBenefits(){
+  renderTicker();
+  const container = document.getElementById('benefits');
+  container.innerHTML = '';
+
+  for(const cadence of CADENCE_ORDER){
+    const items = BENEFITS.filter(b => b.cadence === cadence);
+    if(items.length === 0) continue;
+
+    const period = currentPeriod(cadence);
+    const states = await Promise.all(items.map(b => getChecked(b.id, period)));
+    const checkedCount = states.filter(Boolean).length;
+
+    const group = document.createElement('div');
+    group.className = 'cadence-group';
+
+    const label = document.createElement('div');
+    label.className = 'cadence-label';
+    label.innerHTML = `${CADENCE_LABEL[cadence]} <span class="count" id="count-${cadence}">${checkedCount}/${items.length}</span>`;
+    group.appendChild(label);
+
+    items.forEach((b, i) => {
+      const row = document.createElement('div');
+      row.className = 'benefit' + (states[i] ? ' checked' : '');
+      row.dataset.id = b.id;
+      row.dataset.cadence = cadence;
+
+      row.innerHTML = `
+        <div class="cb ${states[i] ? 'on' : ''}">
+          <svg viewBox="0 0 16 16" fill="none"><path d="M3 8.5L6.2 12L13 4" stroke="white" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </div>
+        <div class="benefit-main">
+          <div class="name">${b.name} <span class="chip ${b.card}" style="margin-left:4px;">${CHIP_LABEL[b.card]}</span><button class="info-btn" type="button" aria-label="Details for ${b.name}">i</button></div>
+          <div class="meta">${b.meta}</div>
+        </div>
+        <div class="value">${b.value}</div>
+      `;
+
+      row.querySelector('.cb').addEventListener('click', async () => {
+        const nowChecked = !row.classList.contains('checked');
+        row.classList.toggle('checked', nowChecked);
+        row.querySelector('.cb').classList.toggle('on', nowChecked);
+        await setChecked(b.id, period, nowChecked);
+        // update count
+        const groupItems = container.querySelectorAll(`.benefit[data-cadence="${cadence}"]`);
+        const checkedNow = Array.from(groupItems).filter(el => el.classList.contains('checked')).length;
+        document.getElementById(`count-${cadence}`).textContent = `${checkedNow}/${groupItems.length}`;
+      });
+
+      row.querySelector('.info-btn').addEventListener('click', (e) => {
+        e.stopPropagation();
+        openModal(b);
+      });
+
+      group.appendChild(row);
+    });
+
+    container.appendChild(group);
+  }
+}
+
+renderBenefits();
+
+// ---------- Modal logic ----------
+const overlay = document.getElementById('modalOverlay');
+const modalBody = document.getElementById('modalBody');
+
+function openModal(b){
+  modalBody.innerHTML = `
+    <div class="modal-top">
+      <div>
+        <div class="modal-title">${b.name}</div>
+        <div class="modal-tags">
+          <span class="modal-value">${b.value}</span>
+          <span class="chip ${b.card}">${CHIP_LABEL[b.card]}</span>
+          <span class="modal-cadence">${CADENCE_LABEL[b.cadence]}</span>
+        </div>
+      </div>
+      <button class="modal-close" type="button" aria-label="Close">&times;</button>
+    </div>
+    <div class="modal-section">
+      <h4>What it is</h4>
+      <p>${b.detail}</p>
+    </div>
+    <div class="modal-section">
+      <h4>Restrictions &amp; fine print</h4>
+      <ul>${b.restrictions.map(r => `<li>${r}</li>`).join('')}</ul>
+    </div>
+  `;
+  modalBody.querySelector('.modal-close').addEventListener('click', closeModal);
+  overlay.classList.add('open');
+}
+
+function closeModal(){
+  overlay.classList.remove('open');
+}
+
+overlay.addEventListener('click', (e) => {
+  if(e.target === overlay) closeModal();
+});
+document.addEventListener('keydown', (e) => {
+  if(e.key === 'Escape') closeModal();
+});
+
+</script>
+</body>
+</html>
